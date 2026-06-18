@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FieldDesk — Field Service Practice App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1C2430;
+    --ink-soft:#2E3A4B;
+    --bg:#F7F6F3;
+    --card:#FFFFFF;
+    --line:#E4E1D8;
+    --amber:#E8A33D;
+    --amber-deep:#C97F1B;
+    --green:#3A7D5C;
+    --green-bg:#E7F1EB;
+    --rust:#C2542C;
+    --rust-bg:#FBEAE3;
+    --slate:#6B7686;
+    --slate-bg:#EEF0EE;
+    --shadow: 0 1px 2px rgba(28,36,48,0.06), 0 4px 16px rgba(28,36,48,0.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    font-size:14px;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.num{font-family:'Space Grotesk',sans-serif;}
+  button{font-family:inherit;cursor:pointer;}
+  input,select,textarea{font-family:inherit;}
+
+  /* ---------- LAYOUT ---------- */
+  .app{display:flex;min-height:100vh;}
+
+  .sidebar{
+    width:220px;
+    background:var(--ink);
+    color:#fff;
+    flex-shrink:0;
+    display:flex;
+    flex-direction:column;
+    padding:20px 0;
+  }
+  .brand{
+    display:flex;align-items:center;gap:10px;
+    padding:0 20px 22px;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+    margin-bottom:10px;
+  }
+  .brand-mark{
+    width:30px;height:30px;border-radius:7px;
+    background:var(--amber);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;color:var(--ink);font-size:15px;
+    font-family:'Space Grotesk',sans-serif;
+    transform:rotate(-3deg);
+  }
+  .brand-name{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;letter-spacing:0.2px;}
+  .nav{display:flex;flex-direction:column;gap:2px;padding:6px 12px;}
+  .nav-item{
+    display:flex;align-items:center;gap:10px;
+    padding:9px 12px;border-radius:7px;
+    color:rgba(255,255,255,0.68);
+    text-decoration:none;font-size:13.5px;font-weight:500;
+    border:none;background:none;width:100%;text-align:left;
+  }
+  .nav-item:hover{background:rgba(255,255,255,0.06);color:#fff;}
+  .nav-item.active{background:rgba(232,163,61,0.16);color:var(--amber);}
+  .nav-icon{width:16px;text-align:center;font-size:14px;}
+  .nav-spacer{flex:1;}
+  .nav-foot{
+    padding:14px 20px;font-size:11.5px;color:rgba(255,255,255,0.35);
+    border-top:1px solid rgba(255,255,255,0.08);
+  }
+
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;}
+  .topbar{
+    height:64px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 28px;border-bottom:1px solid var(--line);
+    background:var(--card);
+  }
+  .page-title{font-size:19px;font-weight:700;}
+  .topbar-actions{display:flex;gap:10px;align-items:center;}
+
+  .content{flex:1;padding:26px 28px 40px;overflow-y:auto;}
+
+  /* ---------- BUTTONS ---------- */
+  .btn{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:9px 15px;border-radius:7px;font-size:13.5px;font-weight:600;
+    border:1px solid var(--line);background:var(--card);color:var(--ink);
+    transition:transform .06s ease;
+  }
+  .btn:hover{border-color:#C9C5B8;}
+  .btn:active{transform:scale(0.97);}
+  .btn-primary{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .btn-primary:hover{background:var(--ink-soft);}
+  .btn-amber{background:var(--amber);color:var(--ink);border-color:var(--amber-deep);}
+  .btn-amber:hover{background:var(--amber-deep);color:#fff;}
+  .btn-danger{background:var(--card);color:var(--rust);border-color:var(--rust-bg);}
+  .btn-danger:hover{background:var(--rust-bg);}
+  .btn-ghost{background:transparent;border-color:transparent;}
+  .btn-ghost:hover{background:var(--slate-bg);}
+  .btn-sm{padding:5px 10px;font-size:12.5px;border-radius:6px;}
+  .btn-icon{padding:7px 9px;}
+  .btn:disabled{opacity:0.45;cursor:not-allowed;}
+
+  /* ---------- CARDS / TABLE ---------- */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);}
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+  .stat{padding:18px 18px;}
+  .stat-label{font-size:12px;color:var(--slate);font-weight:600;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:8px;}
+  .stat-value{font-size:26px;font-weight:700;}
+
+  .table-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  thead th{
+    text-align:left;padding:12px 16px;font-size:11.5px;font-weight:700;
+    color:var(--slate);text-transform:uppercase;letter-spacing:0.5px;
+    border-bottom:1px solid var(--line);white-space:nowrap;
+  }
+  tbody td{padding:13px 16px;border-bottom:1px solid var(--line);vertical-align:middle;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:#FCFBF9;}
+  .row-link{font-weight:600;color:var(--ink);text-decoration:none;cursor:pointer;}
+  .row-link:hover{color:var(--amber-deep);text-decoration:underline;}
+  .cell-actions{display:flex;gap:6px;justify-content:flex-end;}
+  .muted{color:var(--slate);}
+  .empty-state{padding:60px 20px;text-align:center;color:var(--slate);}
+  .empty-state .big{font-size:32px;margin-bottom:10px;}
+  .empty-state h3{color:var(--ink);margin:0 0 6px;font-size:16px;}
+
+  /* ---------- TAG (signature element: notched work-order tag) ---------- */
+  .tag{
+    position:relative;
+    display:inline-flex;align-items:center;
+    padding:4px 11px 4px 9px;
+    font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;
+    border-radius:0 4px 4px 4px;
+    line-height:1.4;
+  }
+  .tag::before{
+    content:'';position:absolute;left:-6px;top:50%;transform:translateY(-50%);
+    width:0;height:0;border-top:8px solid transparent;border-bottom:8px solid transparent;
+    border-right:6px solid currentColor;opacity:0.35;
+  }
+  .tag-dot{width:5px;height:5px;border-radius:50%;background:currentColor;margin-right:6px;}
+  .tag-lead{background:#EFEEEA;color:#6B7686;}
+  .tag-scheduled{background:#E8EEF8;color:#3B5DBA;}
+  .tag-in_progress{background:#FDF1DF;color:var(--amber-deep);}
+  .tag-completed{background:var(--green-bg);color:var(--green);}
+  .tag-cancelled{background:var(--rust-bg);color:var(--rust);}
+  .tag-draft{background:#EFEEEA;color:#6B7686;}
+  .tag-sent{background:#E8EEF8;color:#3B5DBA;}
+  .tag-approved{background:var(--green-bg);color:var(--green);}
+  .tag-declined{background:var(--rust-bg);color:var(--rust);}
+  .tag-unpaid{background:var(--rust-bg);color:var(--rust);}
+  .tag-partial{background:#FDF1DF;color:var(--amber-deep);}
+  .tag-paid{background:var(--green-bg);color:var(--green);}
+
+  /* ---------- SLIDE-OVER PANEL ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(28,36,48,0.32);
+    opacity:0;pointer-events:none;transition:opacity .18s ease;z-index:40;
+  }
+  .overlay.open{opacity:1;pointer-events:auto;}
+  .panel{
+    position:fixed;top:0;right:0;height:100vh;width:480px;max-width:92vw;
+    background:var(--card);box-shadow:-8px 0 28px rgba(28,36,48,0.18);
+    transform:translateX(100%);transition:transform .2s ease;
+    z-index:41;display:flex;flex-direction:column;
+  }
+  .panel.open{transform:translateX(0);}
+  .panel-head{
+    padding:20px 24px;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+  }
+  .panel-head h2{margin:0;font-size:17px;}
+  .panel-body{padding:22px 24px;overflow-y:auto;flex:1;}
+  .panel-foot{
+    padding:16px 24px;border-top:1px solid var(--line);
+    display:flex;gap:10px;justify-content:flex-end;flex-shrink:0;
+  }
+
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin-bottom:6px;}
+  .field-row{display:flex;gap:12px;}
+  .field-row .field{flex:1;}
+  input[type=text],input[type=number],input[type=date],input[type=email],input[type=tel],select,textarea{
+    width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:7px;
+    font-size:13.5px;background:#FCFBF9;color:var(--ink);
+  }
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--amber);outline-offset:0;border-color:var(--amber);background:#fff;}
+  textarea{resize:vertical;min-height:64px;}
+  .hint{font-size:11.5px;color:var(--slate);margin-top:5px;}
+
+  /* ---------- LINE ITEMS ---------- */
+  .items-box{border:1px solid var(--line);border-radius:9px;overflow:hidden;}
+  .item-row{
+    display:grid;grid-template-columns:1fr 56px 90px 90px 30px;gap:8px;
+    padding:10px 12px;border-bottom:1px solid var(--line);align-items:center;
+  }
+  .item-row.head{
+    background:#FAF9F6;font-size:11px;font-weight:700;color:var(--slate);
+    text-transform:uppercase;letter-spacing:0.4px;padding:8px 12px;
+  }
+  .item-row:last-child{border-bottom:none;}
+  .item-row input{padding:6px 8px;font-size:13px;}
+  .item-amt{text-align:right;font-weight:600;font-size:13.5px;padding-right:4px;}
+  .item-remove{background:none;border:none;color:var(--slate);font-size:16px;cursor:pointer;padding:2px;}
+  .item-remove:hover{color:var(--rust);}
+  .items-add{padding:10px 12px;background:#FAF9F6;}
+  .totals{margin-top:12px;display:flex;flex-direction:column;gap:6px;align-items:flex-end;}
+  .totals-row{display:flex;justify-content:space-between;width:220px;font-size:13.5px;}
+  .totals-row.grand{font-weight:700;font-size:15.5px;border-top:1px solid var(--line);padding-top:8px;margin-top:2px;}
+
+  /* ---------- DETAIL VIEW ---------- */
+  .detail-grid{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;}
+  .detail-head{
+    display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;
+  }
+  .detail-head h1{font-size:22px;margin:0 0 8px;}
+  .detail-meta{display:flex;gap:16px;color:var(--slate);font-size:13px;flex-wrap:wrap;}
+  .panel-section{padding:18px 0;border-bottom:1px solid var(--line);}
+  .panel-section:last-child{border-bottom:none;}
+  .panel-section h3{font-size:12.5px;text-transform:uppercase;letter-spacing:0.4px;color:var(--slate);margin:0 0 12px;}
+  .kv{display:flex;justify-content:space-between;padding:6px 0;font-size:13.5px;}
+  .kv span:first-child{color:var(--slate);}
+
+  .breadcrumb{font-size:13px;color:var(--slate);margin-bottom:4px;}
+  .breadcrumb a{color:var(--slate);text-decoration:none;cursor:pointer;}
+  .breadcrumb a:hover{color:var(--ink);text-decoration:underline;}
+
+  .toast{
+    position:fixed;bottom:24px;right:24px;background:var(--ink);color:#fff;
+    padding:12px 18px;border-radius:8px;font-size:13.5px;font-weight:500;
+    box-shadow:0 8px 24px rgba(0,0,0,0.2);z-index:100;
+    opacity:0;transform:translateY(8px);transition:all .18s ease;pointer-events:none;
+  }
+  .toast.show{opacity:1;transform:translateY(0);}
+
+  .confirm-overlay{
+    position:fixed;inset:0;background:rgba(28,36,48,0.4);z-index:60;
+    display:none;align-items:center;justify-content:center;
+  }
+  .confirm-overlay.open{display:flex;}
+  .confirm-box{background:#fff;border-radius:12px;padding:24px;width:360px;box-shadow:var(--shadow);}
+  .confirm-box h3{margin:0 0 8px;font-size:16px;}
+  .confirm-box p{margin:0 0 18px;color:var(--slate);font-size:13.5px;}
+  .confirm-actions{display:flex;gap:10px;justify-content:flex-end;}
+
+  .search-box{position:relative;}
+  .search-box input{width:240px;padding:8px 12px 8px 32px;}
+  .search-box::before{
+    content:'⌕';position:absolute;left:11px;top:50%;transform:translateY(-50%);
+    color:var(--slate);font-size:14px;
+  }
+
+  .pay-method-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+  .pay-method{
+    border:1px solid var(--line);border-radius:8px;padding:12px;text-align:center;
+    cursor:pointer;font-size:13px;font-weight:600;background:#FCFBF9;
+  }
+  .pay-method.selected{border-color:var(--amber);background:#FDF1DF;color:var(--amber-deep);}
+
+  .convert-note{
+    background:#FDF1DF;border:1px solid #F0DBAE;border-radius:8px;padding:12px 14px;
+    font-size:12.5px;color:var(--amber-deep);margin-bottom:16px;
+  }
+
+  ::-webkit-scrollbar{width:9px;height:9px;}
+  ::-webkit-scrollbar-thumb{background:#D8D4C8;border-radius:5px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+
+  @media (max-width:900px){
+    .stats-row{grid-template-columns:repeat(2,1fr);}
+    .detail-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div id="app" class="app"></div>
+<div id="overlay" class="overlay" data-testid="overlay"></div>
+<div id="panel-root"></div>
+<div id="toast" class="toast" data-testid="toast"></div>
+<div id="confirm-root" class="confirm-overlay" data-testid="confirm-overlay">
+  <div class="confirm-box">
+    <h3 id="confirm-title">Delete this?</h3>
+    <p id="confirm-msg">This action cannot be undone.</p>
+    <div class="confirm-actions">
+      <button class="btn" data-testid="confirm-cancel" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-danger" data-testid="confirm-ok" id="confirm-ok-btn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   FIELDDESK — Field Service Practice App
+   Pure vanilla JS + localStorage. Built for Playwright test practice.
+   ===================================================================== */
+
+const STORAGE_KEY = 'fielddesk_data_v1';
+
+const uid = (p) => p + '_' + Math.random().toString(36).slice(2,9);
+
+function defaultData(){
+  return {
+    customers: [
+      {id:'cust_001', name:'Marisol Reyes', email:'marisol.reyes@example.com', phone:'555-0192', address:'14 Birchwood Ln, Springfield'},
+      {id:'cust_002', name:'Dale Whitfield', email:'dale.whitfield@example.com', phone:'555-0143', address:'882 Cedar Ct, Riverton'},
+      {id:'cust_003', name:'Priya Anand', email:'priya.anand@example.com', phone:'555-0177', address:'29 Maple Ave, Brookfield'}
+    ],
+    jobs: [
+      {
+        id:'job_1001', customerId:'cust_001', title:'Water heater replacement', status:'scheduled',
+        scheduledDate:'2026-06-22', notes:'Customer reports no hot water since Tuesday.',
+        items:[{id:uid('it'), name:'40-gal Water Heater Unit', qty:1, price:680},{id:uid('it'), name:'Labor — Install', qty:3, price:95}],
+        createdAt:'2026-06-15', invoiceId:null
+      },
+      {
+        id:'job_1002', customerId:'cust_002', title:'AC unit annual maintenance', status:'completed',
+        scheduledDate:'2026-06-10', notes:'Routine seasonal checkup.',
+        items:[{id:uid('it'), name:'AC Tune-up Service', qty:1, price:120}],
+        createdAt:'2026-06-01', invoiceId:'inv_5001'
+      },
+      {
+        id:'job_1003', customerId:'cust_003', title:'Leaky faucet repair', status:'lead',
+        scheduledDate:'', notes:'Kitchen faucet dripping, needs assessment.',
+        items:[], createdAt:'2026-06-17', invoiceId:null
+      }
+    ],
+    quotes: [
+      {
+        id:'quo_2001', customerId:'cust_003', title:'Bathroom remodel — plumbing rough-in', status:'sent',
+        createdAt:'2026-06-12', expiresAt:'2026-07-12',
+        items:[{id:uid('it'), name:'Rough-in Labor', qty:16, price:95},{id:uid('it'), name:'Copper Pipe (50ft)', qty:1, price:210}],
+        convertedJobId:null
+      },
+      {
+        id:'quo_2002', customerId:'cust_002', title:'Tankless water heater upgrade', status:'draft',
+        createdAt:'2026-06-16', expiresAt:'2026-07-16',
+        items:[{id:uid('it'), name:'Tankless Unit', qty:1, price:1450}],
+        convertedJobId:null
+      }
+    ],
+    invoices: [
+      {
+        id:'inv_5001', jobId:'job_1002', customerId:'cust_002', status:'paid',
+        createdAt:'2026-06-10', dueDate:'2026-06-24',
+        items:[{id:uid('it'), name:'AC Tune-up Service', qty:1, price:120}],
+        payments:[{id:uid('pay'), amount:120, method:'card', date:'2026-06-10', note:'Paid in full on completion'}]
+      }
+    ]
+  };
+}
+
+let DB = loadData();
+function loadData(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  const d = defaultData();
+  saveData(d);
+  return d;
+}
+function saveData(d){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
+}
+function persist(){ saveData(DB); }
+
+/* ---------- ROUTER ---------- */
+let route = {page:'dashboard', id:null};
+
+function nav(page, id=null){
+  route = {page, id};
+  render();
+  window.scrollTo(0,0);
+}
+
+/* ---------- HELPERS ---------- */
+function money(n){
+  const v = Number(n)||0;
+  return '$' + v.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function fmtDate(d){
+  if(!d) return '—';
+  const dt = new Date(d+'T00:00:00');
+  if(isNaN(dt)) return d;
+  return dt.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+}
+function getCustomer(id){ return DB.customers.find(c=>c.id===id); }
+function getJob(id){ return DB.jobs.find(j=>j.id===id); }
+function getQuote(id){ return DB.quotes.find(q=>q.id===id); }
+function getInvoice(id){ return DB.invoices.find(i=>i.id===id); }
+function itemsTotal(items){ return items.reduce((s,it)=> s + (Number(it.qty)||0)*(Number(it.price)||0), 0); }
+function invoicePaid(inv){ return (inv.payments||[]).reduce((s,p)=>s+(Number(p.amount)||0),0); }
+function invoiceBalance(inv){ return itemsTotal(inv.items) - invoicePaid(inv); }
+function invoiceStatusComputed(inv){
+  const bal = invoiceBalance(inv);
+  const paid = invoicePaid(inv);
+  if(bal<=0.001) return 'paid';
+  if(paid>0) return 'partial';
+  return 'unpaid';
+}
+function statusLabel(s){
+  return s.replace(/_/g,' ').replace(/\b\w/g, c=>c.toUpperCase());
+}
+function tag(status, type='job'){
+  return `<span class="tag tag-${status}" data-testid="status-tag" data-status="${status}">${statusLabel(status)}</span>`;
+}
+function escapeHtml(s){
+  if(s==null) return '';
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+let toastTimer=null;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+let confirmCallback = null;
+function openConfirm(title, msg, onConfirm, okLabel='Delete'){
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-msg').textContent = msg;
+  const okBtn = document.getElementById('confirm-ok-btn');
+  okBtn.textContent = okLabel;
+  document.getElementById('confirm-root').classList.add('open');
+  confirmCallback = onConfirm;
+  okBtn.onclick = function(){
+    if(confirmCallback) confirmCallback();
+    closeConfirm();
+  };
+}
+function closeConfirm(){
+  document.getElementById('confirm-root').classList.remove('open');
+  confirmCallback = null;
+}
+
+/* ---------- PANEL (slide-over) MANAGEMENT ---------- */
+function openPanel(html){
+  document.getElementById('panel-root').innerHTML = `<div class="panel" id="thePanel" data-testid="panel">${html}</div>`;
+  document.getElementById('overlay').classList.add('open');
+  requestAnimationFrame(()=> document.getElementById('thePanel').classList.add('open'));
+}
+function closePanel(){
+  const p = document.getElementById('thePanel');
+  if(p) p.classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+  setTimeout(()=>{ document.getElementById('panel-root').innerHTML=''; }, 200);
+}
+document.getElementById('overlay').addEventListener('click', closePanel);
+document.getElementById('confirm-root').addEventListener('click', (e)=>{
+  if(e.target.id==='confirm-root') closeConfirm();
+});
+
+/* =====================================================================
+   RENDER: SHELL
+   ===================================================================== */
+function render(){
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    ${renderSidebar()}
+    <div class="main">
+      ${renderTopbar()}
+      <div class="content" data-testid="page-content">${renderPage()}</div>
+    </div>
+  `;
+}
+
+function renderSidebar(){
+  const items = [
+    {page:'dashboard', icon:'&#9670;', label:'Dashboard'},
+    {page:'jobs', icon:'&#128295;', label:'Jobs'},
+    {page:'quotes', icon:'&#128196;', label:'Quotes'},
+    {page:'invoices', icon:'&#128179;', label:'Invoices'},
+    {page:'customers', icon:'&#128100;', label:'Customers'},
+  ];
+  const current = route.page==='job-detail' ? 'jobs' : route.page==='quote-detail' ? 'quotes' : route.page==='invoice-detail' ? 'invoices' : route.page;
+  return `
+  <div class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">FD</div>
+      <div class="brand-name">FieldDesk</div>
+    </div>
+    <nav class="nav">
+      ${items.map(i=>`
+        <button class="nav-item ${current===i.page?'active':''}" data-testid="nav-${i.page}" onclick="nav('${i.page}')">
+          <span class="nav-icon">${i.icon}</span> ${i.label}
+        </button>
+      `).join('')}
+    </nav>
+    <div class="nav-spacer"></div>
+    <div class="nav-foot">Practice data only<br>Stored in this browser</div>
+  </div>`;
+}
+
+function pageTitle(){
+  switch(route.page){
+    case 'dashboard': return 'Dashboard';
+    case 'jobs': return 'Jobs';
+    case 'quotes': return 'Quotes';
+    case 'invoices': return 'Invoices';
+    case 'customers': return 'Customers';
+    case 'job-detail': return 'Job Detail';
+    case 'quote-detail': return 'Quote Detail';
+    case 'invoice-detail': return 'Invoice Detail';
+    default: return 'FieldDesk';
+  }
+}
+
+function renderTopbar(){
+  let actions = '';
+  if(route.page==='jobs') actions = `<button class="btn btn-amber" data-testid="btn-new-job" onclick="openJobForm()">+ New Job</button>`;
+  if(route.page==='quotes') actions = `<button class="btn btn-amber" data-testid="btn-new-quote" onclick="openQuoteForm()">+ New Quote</button>`;
+  if(route.page==='customers') actions = `<button class="btn btn-amber" data-testid="btn-new-customer" onclick="openCustomerForm()">+ New Customer</button>`;
+  return `
+  <div class="topbar">
+    <div class="page-title" data-testid="page-title">${pageTitle()}</div>
+    <div class="topbar-actions">${actions}</div>
+  </div>`;
+}
+
+function renderPage(){
+  switch(route.page){
+    case 'dashboard': return renderDashboard();
+    case 'jobs': return renderJobsList();
+    case 'quotes': return renderQuotesList();
+    case 'invoices': return renderInvoicesList();
+    case 'customers': return renderCustomersList();
+    case 'job-detail': return renderJobDetail(route.id);
+    case 'quote-detail': return renderQuoteDetail(route.id);
+    case 'invoice-detail': return renderInvoiceDetail(route.id);
+    default: return '<p>Not found</p>';
+  }
+}
+
+/* =====================================================================
+   DASHBOARD
+   ===================================================================== */
+function renderDashboard(){
+  const activeJobs = DB.jobs.filter(j=>j.status!=='completed' && j.status!=='cancelled').length;
+  const openQuotes = DB.quotes.filter(q=>q.status==='sent' || q.status==='draft').length;
+  const outstanding = DB.invoices.reduce((s,i)=> s + Math.max(invoiceBalance(i),0), 0);
+  const paidThisMonth = DB.invoices.reduce((s,i)=> s + invoicePaid(i), 0);
+
+  const recentJobs = [...DB.jobs].sort((a,b)=> (b.createdAt||'').localeCompare(a.createdAt||'')).slice(0,5);
+
+  return `
+    <div class="stats-row">
+      <div class="card stat" data-testid="stat-active-jobs">
+        <div class="stat-label">Active Jobs</div>
+        <div class="stat-value">${activeJobs}</div>
+      </div>
+      <div class="card stat" data-testid="stat-open-quotes">
+        <div class="stat-label">Open Quotes</div>
+        <div class="stat-value">${openQuotes}</div>
+      </div>
+      <div class="card stat" data-testid="stat-outstanding">
+        <div class="stat-label">Outstanding Balance</div>
+        <div class="stat-value">${money(outstanding)}</div>
+      </div>
+      <div class="card stat" data-testid="stat-collected">
+        <div class="stat-label">Total Collected</div>
+        <div class="stat-value">${money(paidThisMonth)}</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="table-wrap">
+        <table data-testid="recent-jobs-table">
+          <thead><tr><th>Job</th><th>Customer</th><th>Status</th><th>Scheduled</th><th></th></tr></thead>
+          <tbody>
+            ${recentJobs.length ? recentJobs.map(j=>`
+              <tr data-testid="job-row-${j.id}">
+                <td><a class="row-link" data-testid="job-link-${j.id}" onclick="nav('job-detail','${j.id}')">${escapeHtml(j.title)}</a></td>
+                <td class="muted">${escapeHtml(getCustomer(j.customerId)?.name || 'Unknown')}</td>
+                <td>${tag(j.status)}</td>
+                <td class="muted">${fmtDate(j.scheduledDate)}</td>
+                <td><button class="btn btn-sm" onclick="nav('job-detail','${j.id}')">View</button></td>
+              </tr>
+            `).join('') : `<tr><td colspan="5" class="empty-state">No jobs yet.</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+/* =====================================================================
+   JOBS LIST
+   ===================================================================== */
+function renderJobsList(){
+  const jobs = [...DB.jobs].sort((a,b)=> (b.createdAt||'').localeCompare(a.createdAt||''));
+  return `
+    <div class="card">
+      <div class="table-wrap">
+        <table data-testid="jobs-table">
+          <thead><tr><th>Title</th><th>Customer</th><th>Status</th><th>Scheduled</th><th>Total</th><th></th></tr></thead>
+          <tbody>
+            ${jobs.length ? jobs.map(j=>`
+              <tr data-testid="job-row-${j.id}">
+                <td><a class="row-link" data-testid="job-link-${j.id}" onclick="nav('job-detail','${j.id}')">${escapeHtml(j.title)}</a></td>
+                <td class="muted">${escapeHtml(getCustomer(j.customerId)?.name || 'Unknown')}</td>
+                <td>${tag(j.status)}</td>
+                <td class="muted">${fmtDate(j.scheduledDate)}</td>
+                <td>${money(itemsTotal(j.items))}</td>
+                <td>
+                  <div class="cell-actions">
+                    <button class="btn btn-sm" data-testid="job-edit-${j.id}" onclick="openJobForm('${j.id}')">Edit</button>
+                    <button class="btn btn-sm btn-danger" data-testid="job-delete-${j.id}" onclick="confirmDeleteJob('${j.id}')">Delete</button>
+                  </div>
+                </td>
+              </tr>
+            `).join('') : emptyRow(6, 'No jobs yet', 'Create your first job to get started.')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function emptyRow(colspan, title, sub){
+  return `<tr><td colspan="${colspan}"><div class="empty-state" data-testid="empty-state"><div class="big">&#128203;</div><h3>${title}</h3><p>${sub}</p></div></td></tr>`;
+}
+
+function confirmDeleteJob(id){
+  const job = getJob(id);
+  openConfirm('Delete job?', `"${job.title}" will be permanently deleted.`, ()=>{
+    DB.jobs = DB.jobs.filter(j=>j.id!==id);
+    persist();
+    showToast('Job deleted');
+    if(route.page==='job-detail' && route.id===id) nav('jobs'); else render();
+  });
+}
+
+/* ---------- JOB FORM (create/edit) ---------- */
+function openJobForm(id=null){
+  const job = id ? getJob(id) : null;
+  const isEdit = !!job;
+  const customers = DB.customers;
+
+  openPanel(`
+    <div class="panel-head">
+      <h2>${isEdit ? 'Edit Job' : 'New Job'}</h2>
+      <button class="btn btn-icon btn-ghost" data-testid="panel-close" onclick="closePanel()">&#10005;</button>
+    </div>
+    <div class="panel-body">
+      <div class="field">
+        <label>Job Title</label>
+        <input type="text" id="f-title" data-testid="input-job-title" value="${escapeHtml(job?.title||'')}" placeholder="e.g. Furnace inspection">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Customer</label>
+          <select id="f-customer" data-testid="select-job-customer">
+            <option value="">Select customer…</option>
+            ${customers.map(c=>`<option value="${c.id}" ${job?.customerId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field">
+          <label>Status</label>
+          <select id="f-status" data-testid="select-job-status">
+            ${['lead','scheduled','in_progress','completed','cancelled'].map(s=>`<option value="${s}" ${job?.status===s?'selected':''}>${statusLabel(s)}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Scheduled Date</label>
+        <input type="date" id="f-date" data-testid="input-job-date" value="${job?.scheduledDate||''}">
+      </div>
+      <div class="field">
+        <label>Notes</label>
+        <textarea id="f-notes" data-testid="input-job-notes" placeholder="Details about the job…">${escapeHtml(job?.notes||'')}</textarea>
+      </div>
+      <div class="field">
+        <label>Line Items</label>
+        ${renderItemsEditor(job?.items || [], 'job')}
+      </div>
+    </div>
+    <div class="panel-foot">
+      <button class="btn" onclick="closePanel()">Cancel</button>
+      <button class="btn btn-primary" data-testid="btn-save-job" onclick="saveJob(${isEdit ? `'${id}'` : 'null'})">${isEdit ? 'Save Changes' : 'Create Job'}</button>
+    </div>
+  `);
+}
+
+function renderItemsEditor(items, prefix){
+  window['__items_'+prefix] = items.map(it=>({...it}));
+  return `
+    <div class="items-box" id="items-box-${prefix}" data-testid="items-box-${prefix}">
+      <div class="item-row head"><div>Item</div><div>Qty</div><div>Price</div><div>Amount</div><div></div></div>
+      <div id="items-list-${prefix}">${renderItemRows(prefix)}</div>
+    </div>
+    <div class="items-add">
+      <button class="btn btn-sm" type="button" data-testid="btn-add-item-${prefix}" onclick="addItemRow('${prefix}')">+ Add line item</button>
+    </div>
+    <div class="totals">
+      <div class="totals-row grand"><span>Total</span><span id="items-total-${prefix}" data-testid="items-total-${prefix}">${money(itemsTotal(items))}</span></div>
+    </div>
+  `;
+}
+
+function renderItemRows(prefix){
+  const items = window['__items_'+prefix] || [];
+  if(items.length===0){
+    return `<div class="item-row" data-testid="items-empty-${prefix}" style="grid-template-columns:1fr;color:#6B7686;font-size:13px;">No line items yet.</div>`;
+  }
+  return items.map((it,idx)=>`
+    <div class="item-row" data-testid="item-row-${prefix}-${idx}">
+      <input type="text" data-testid="item-name-${prefix}-${idx}" value="${escapeHtml(it.name)}" placeholder="Item or service name" oninput="updateItem('${prefix}',${idx},'name',this.value)">
+      <input type="number" min="0" step="1" data-testid="item-qty-${prefix}-${idx}" value="${it.qty}" oninput="updateItem('${prefix}',${idx},'qty',this.value)">
+      <input type="number" min="0" step="0.01" data-testid="item-price-${prefix}-${idx}" value="${it.price}" oninput="updateItem('${prefix}',${idx},'price',this.value)">
+      <div class="item-amt" data-testid="item-amount-${prefix}-${idx}">${money((Number(it.qty)||0)*(Number(it.price)||0))}</div>
+      <button type="button" class="item-remove" data-testid="item-remove-${prefix}-${idx}" onclick="removeItemRow('${prefix}',${idx})" title="Remove">&#10005;</button>
+    </div>
+  `).join('');
+}
+
+function addItemRow(prefix){
+  window['__items_'+prefix].push({id:uid('it'), name:'', qty:1, price:0});
+  refreshItemsEditor(prefix);
+}
+function removeItemRow(prefix, idx){
+  window['__items_'+prefix].splice(idx,1);
+  refreshItemsEditor(prefix);
+}
+function updateItem(prefix, idx, field, value){
+  const it = window['__items_'+prefix][idx];
+  it[field] = value;
+  // Only patch the amount cell for this row + the grand total — never
+  // re-render the input rows themselves, or the field being typed into
+  // loses focus (and the rest of its keystrokes never register).
+  const amtEl = document.querySelector(`[data-testid="item-amount-${prefix}-${idx}"]`);
+  if(amtEl) amtEl.textContent = money((Number(it.qty)||0)*(Number(it.price)||0));
+  const totalEl = document.getElementById('items-total-'+prefix);
+  if(totalEl) totalEl.textContent = money(itemsTotal(window['__items_'+prefix]));
+}
+function refreshItemsEditor(prefix){
+  // Full re-render: only safe to call for add/remove row, never on a
+  // keystroke inside an input that's still focused.
+  document.getElementById('items-list-'+prefix).innerHTML = renderItemRows(prefix);
+  document.getElementById('items-total-'+prefix).textContent = money(itemsTotal(window['__items_'+prefix]));
+}
+
+function collectItems(prefix){
+  return (window['__items_'+prefix]||[])
+    .filter(it=> (it.name && it.name.trim()!=='') || Number(it.qty)>0 || Number(it.price)>0)
+    .map(it=>({id:it.id||uid('it'), name:it.name||'Untitled item', qty:Number(it.qty)||0, price:Number(it.price)||0}));
+}
+
+function saveJob(id){
+  const title = document.getElementById('f-title').value.trim();
+  const customerId = document.getElementById('f-customer').value;
+  const status = document.getElementById('f-status').value;
+  const scheduledDate = document.getElementById('f-date').value;
+  const notes = document.getElementById('f-notes').value;
+  const items = collectItems('job');
+
+  if(!title){ showToast('Job title is required'); return; }
+  if(!customerId){ showToast('Please select a customer'); return; }
+
+  if(id){
+    const job = getJob(id);
+    Object.assign(job, {title, customerId, status, scheduledDate, notes, items});
+    showToast('Job updated');
+  } else {
+    const job = {
+      id: uid('job'), title, customerId, status, scheduledDate, notes, items,
+      createdAt: new Date().toISOString().slice(0,10), invoiceId:null
+    };
+    DB.jobs.push(job);
+    showToast('Job created');
+    id = job.id;
+  }
+  persist();
+  closePanel();
+  if(route.page==='job-detail') nav('job-detail', id); else render();
+}
+
+/* ---------- JOB DETAIL ---------- */
+function renderJobDetail(id){
+  const job = getJob(id);
+  if(!job) return `<p>Job not found.</p>`;
+  const cust = getCustomer(job.customerId);
+  const total = itemsTotal(job.items);
+  const invoice = job.invoiceId ? getInvoice(job.invoiceId) : null;
+
+  return `
+    <div class="breadcrumb"><a onclick="nav('jobs')">Jobs</a> / ${escapeHtml(job.title)}</div>
+    <div class="detail-head">
+      <div>
+        <h1 data-testid="job-detail-title">${escapeHtml(job.title)}</h1>
+        <div class="detail-meta">
+          <span data-testid="job-detail-status">${tag(job.status)}</span>
+          <span>Customer: <a class="row-link" onclick="nav('customers')">${escapeHtml(cust?.name||'Unknown')}</a></span>
+          <span>Scheduled: ${fmtDate(job.scheduledDate)}</span>
+          <span>Created: ${fmtDate(job.createdAt)}</span>
+        </div>
+      </div>
+      <div class="cell-actions">
+        <button class="btn" data-testid="btn-edit-job" onclick="openJobForm('${job.id}')">Edit Job</button>
+        ${!job.invoiceId ? `<button class="btn btn-amber" data-testid="btn-create-invoice" onclick="createInvoiceFromJob('${job.id}')">Create Invoice</button>` : `<button class="btn btn-primary" data-testid="btn-view-invoice" onclick="nav('invoice-detail','${job.invoiceId}')">View Invoice</button>`}
+        <button class="btn btn-danger" data-testid="btn-delete-job" onclick="confirmDeleteJob('${job.id}')">Delete</button>
+      </div>
+    </div>
+
+    <div class="detail-grid">
+      <div>
+        <div class="card" style="padding:20px;margin-bottom:16px;">
+          <h3 style="margin-top:0;font-size:13px;text-transform:uppercase;color:var(--slate);letter-spacing:0.4px;">Notes</h3>
+          <p style="margin:0;" data-testid="job-detail-notes">${escapeHtml(job.notes) || '<span class="muted">No notes added.</span>'}</p>
+        </div>
+
+        <div class="card">
+          <div style="padding:16px 18px 0;font-size:13px;text-transform:uppercase;color:var(--slate);letter-spacing:0.4px;font-weight:700;">Line Items</div>
+          <div class="table-wrap">
+            <table data-testid="job-items-table">
+              <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Amount</th></tr></thead>
+              <tbody>
+                ${job.items.length ? job.items.map(it=>`
+                  <tr><td>${escapeHtml(it.name)}</td><td>${it.qty}</td><td>${money(it.price)}</td><td>${money(it.qty*it.price)}</td></tr>
+                `).join('') : `<tr><td colspan="4" class="muted" style="padding:18px;">No line items on this job.</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+          <div style="padding:14px 18px;display:flex;justify-content:flex-end;">
+            <div class="totals-row grand" style="width:220px;"><span>Total</span><span data-testid="job-detail-total">${money(total)}</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:18px;">
+        <h3 style="margin-top:0;font-size:13px;text-transform:uppercase;color:var(--slate);letter-spacing:0.4px;">Customer</h3>
+        ${cust ? `
+          <div class="kv"><span>Name</span><span>${escapeHtml(cust.name)}</span></div>
+          <div class="kv"><span>Email</span><span>${escapeHtml(cust.email)}</span></div>
+          <div class="kv"><span>Phone</span><span>${escapeHtml(cust.phone)}</span></div>
+          <div class="kv"><span>Address</span><span style="text-align:right;">${escapeHtml(cust.address)}</span></div>
+        ` : `<p class="muted">No customer linked.</p>`}
+        ${invoice ? `
+          <h3 style="font-size:13px;text-transform:uppercase;color:var(--slate);letter-spacing:0.4px;margin-top:18px;">Invoice</h3>
+          <div class="kv"><span>Status</span><span>${tag(invoiceStatusComputed(invoice))}</span></div>
+          <div class="kv"><span>Balance</span><span>${money(invoiceBalance(invoice))}</span></div>
+          <button class="btn btn-sm" style="margin-top:8px;width:100%;" onclick="nav('invoice-detail','${invoice.id}')">Open Invoice</button>
+        ` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function createInvoiceFromJob(jobId){
+  const job = getJob(jobId);
+  if(job.invoiceId){ nav('invoice-detail', job.invoiceId); return; }
+  const invoice = {
+    id: uid('inv'), jobId: job.id, customerId: job.customerId, status:'unpaid',
+    createdAt: new Date().toISOString().slice(0,10),
+    dueDate: '', items: job.items.map(it=>({...it, id:uid('it')})),
+    payments: []
+  };
+  DB.invoices.push(invoice);
+  job.invoiceId = invoice.id;
+  persist();
+  showToast('Invoice created from job');
+  nav('invoice-detail', invoice.id);
+}
+
+/* =====================================================================
+   QUOTES LIST
+   ===================================================================== */
+function renderQuotesList(){
+  const quotes = [...DB.quotes].sort((a,b)=> (b.createdAt||'').localeCompare(a.createdAt||''));
+  return `
+    <div class="card">
+      <div class="table-wrap">
+        <table data-testid="quotes-table">
+          <thead><tr><th>Title</th><th>Customer</th><th>Status</th><th>Created</th><th>Total</th><th></th></tr></thead>
+          <tbody>
+            ${quotes.length ? quotes.map(q=>`
+              <tr data-testid="quote-row-${q.id}">
+                <td><a class="row-link" data-testid="quote-link-${q.id}" onclick="nav('quote-detail','${q.id}')">${escapeHtml(q.title)}</a></td>
+                <td class="muted">${escapeHtml(getCustomer(q.customerId)?.name || 'Unknown')}</td>
+                <td>${tag(q.status)}</td>
+                <td class="muted">${fmtDate(q.createdAt)}</td>
+                <td>${money(itemsTotal(q.items))}</td>
+                <td>
+                  <div class="cell-actions">
+                    <button class="btn btn-sm" data-testid="quote-edit-${q.id}" onclick="openQuoteForm('${q.id}')">Edit</button>
+                    <button class="btn btn-sm btn-danger" data-testid="quote-delete-${q.id}" onclick="confirmDeleteQuote('${q.id}')">Delete</button>
+                  </div>
+                </td>
+              </tr>
+            `).join('') : emptyRow(6, 'No quotes yet', 'Create a quote to send to a customer.')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function confirmDeleteQuote(id){
+  const q = getQuote(id);
+  openConfirm('Delete quote?', `"${q.title}" will be permanently deleted.`, ()=>{
+    DB.quotes = DB.quotes.filter(x=>x.id!==id);
+    persist();
+    showToast('Quote deleted');
+    if(route.page==='quote-detail' && route.id===id) nav('quotes'); else render();
+  });
+}
+
+function openQuoteForm(id=null){
+  const quote = id ? getQuote(id) : null;
+  const isEdit = !!quote;
+  const customers = DB.customers;
+
+  openPanel(`
+    <div class="panel-head">
+      <h2>${isEdit ? 'Edit Quote' : 'New Quote'}</h2>
+      <button class="btn btn-icon btn-ghost" data-testid="panel-close" onclick="closePanel()">&#10005;</button>
+    </div>
+    <div class="panel-body">
+      <div class="field">
+        <label>Quote Title</label>
+        <input type="text" id="f-title" data-testid="input-quote-title" value="${escapeHtml(quote?.title||'')}" placeholder="e.g. Bathroom remodel estimate">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Customer</label>
+          <select id="f-customer" data-testid="select-quote-customer">
+            <option value="">Select customer…</option>
+            ${customers.map(c=>`<option value="${c.id}" ${quote?.customerId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field">
+          <label>Status</label>
+          <select id="f-status" data-testid="select-quote-status">
+            ${['draft','sent','approved','declined'].map(s=>`<option value="${s}" ${quote?.status===s?'selected':''}>${statusLabel(s)}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Expires On</label>
+        <input type="date" id="f-expires" data-testid="input-quote-expires" value="${quote?.expiresAt||''}">
+      </div>
+      <div class="field">
+        <label>Line Items</label>
+        ${renderItemsEditor(quote?.items || [], 'quote')}
+      </div>
+    </div>
+    <div class="panel-foot">
+      <button class="btn" onclick="closePanel()">Cancel</button>
+      <button class="btn btn-primary" data-testid="btn-save-quote" onclick="saveQuote(${isEdit ? `'${id}'` : 'null'})">${isEdit ? 'Save Changes' : 'Create Quote'}</button>
+    </div>
+  `);
+}
+
+function saveQuote(id){
+  const title = document.getElementById('f-title').value.trim();
+  const customerId = document.getElementById('f-customer').value;
+  const status = document.getElementById('f-status').value;
+  const expiresAt = document.getElementById('f-expires').value;
+  const items = collectItems('quote');
+
+  if(!title){ showToast('Quote title is required'); return; }
+  if(!customerId){ showToast('Please select a customer'); return; }
+
+  if(id){
+    const quote = getQuote(id);
+    Object.assign(quote, {title, customerId, status, expiresAt, items});
+    showToast('Quote updated');
+  } else {
+    const quote = {
+      id: uid('quo'), title, customerId, status, expiresAt, items,
+      createdAt: new Date().toISOString().slice(0,10), convertedJobId:null
+    };
+    DB.quotes.push(quote);
+    showToast('Quote created');
+    id = quote.id;
+  }
+  persist();
+  closePanel();
+  if(route.page==='quote-detail') nav('quote-detail', id); else render();
+}
+
+function renderQuoteDetail(id){
+  const quote = getQuote(id);
+  if(!quote) return `<p>Quote not found.</p>`;
+  const cust = getCustomer(quote.customerId);
+  const total = itemsTotal(quote.items);
+
+  return `
+    <div class="breadcrumb"><a onclick="nav('quotes')">Quotes</a> / ${escapeHtml(quote.title)}</div>
+    <div class="detail-head">
+      <div>
+        <h1 data-testid="quote-detail-title">${escapeHtml(quote.title)}</h1>
+        <div class="detail-meta">
+          <span data-testid="quote-detail-status">${tag(quote.status)}</span>
+          <span>Customer: ${escapeHtml(cust?.name||'Unknown')}</span>
+          <span>Created: ${fmtDate(quote.createdAt)}</span>
+          <span>Expires: ${fmtDate(quote.expiresAt)}</span>
+        </div>
+      </div>
+      <div class="cell-actions">
+        <button class="btn" data-testid="btn-edit-quote" onclick="openQuoteForm('${quote.id}')">Edit Quote</button>
+        ${!quote.convertedJobId ? `<button class="btn btn-amber" data-testid="btn-convert-job" onclick="convertQuoteToJob('${quote.id}')">Convert to Job</button>` : `<button class="btn btn-primary" onclick="nav('job-detail','${quote.convertedJobId}')">View Job</button>`}
+        <button class="btn btn-danger" data-testid="btn-delete-quote" onclick="confirmDeleteQuote('${quote.id}')">Delete</button>
+      </div>
+    </div>
+
+    <div class="detail-grid">
+      <div>
+        <div class="card">
+          <div style="padding:16px 18px 0;font-size:13px;text-transform:uppercase;color:var(--slate);letter-spacing:0.4px;font-weight:700;">Line Items</div>
+          <div class="table-wrap">
+            <table data-testid="quote-items-table">
+              <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Amount</th></tr></thead>
+              <tbody>
+                ${quote.items.length ? quote.items.map(it=>`
+                  <tr><td>${escapeHtml(it.name)}</td><td>${it.qty}</td><td>${money(it.price)}</td><td>${money(it.qty*it.price)}</td></tr>
+                `).join('') : `<tr><td colspan="4" class="muted" style="padding:18px;">No line items on this quote.</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+          <div style="padding:14px 18px;display:flex;justify-content:flex-end;">
+            <div class="totals-row grand" style="width:220px;"><span>Total</span><span data-testid="quote-detail-total">${money(total)}</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="padding:18px;">
+        <h3 style="margin-top:0;font-size:13px;text-transform:uppercase;color:var(--slate);letter-spacing:0.4px;">Customer</h3>
+        ${cust ? `
+          <div class="kv"><span>Name</span><span>${escapeHtml(cust.name)}</span></div>
+          <div class="kv"><span>Email</span><span>${escapeHtml(cust.email)}</span></div>
+          <div class="kv"><span>Phone</span><span>${escapeHtml(cust.phone)}</span></div>
+        ` : `<p class="muted">No customer linked.</p>`}
+      </div>
+    </div>
+  `;
+}
+
+function convertQuoteToJob(quoteId){
+  const quote = getQuote(quoteId);
+  if(quote.convertedJobId){ nav('job-detail', quote.convertedJobId); return; }
+  const job = {
+    id: uid('job'), customerId: quote.customerId, title: quote.title, status:'scheduled',
+    scheduledDate:'', notes: `Converted from quote: ${quote.title}`,
+    items: quote.items.map(it=>({...it, id:uid('it')})),
+    createdAt: new Date().toISOString().slice(0,10), invoiceId:null
+  };
+  DB.jobs.push(job);
+  quote.convertedJobId = job.id;
+  quote.status = 'approved';
+  persist();
+  showToast('Quote converted to job');
+  nav('job-detail', job.id);
+}
+
+/* =====================================================================
+   INVOICES LIST
+   ===================================================================== */
+function renderInvoicesList(){
+  const invoices = [...DB.invoices].sort((a,b)=> (b.createdAt||'').localeCompare(a.createdAt||''));
+  return `
+    <div class="card">
+      <div class="table-wrap">
+        <table data-testid="invoices-table">
+          <thead><tr><th>Invoice</th><th>Customer</th><th>Status</th><th>Created</th><th>Total</th><th>Balance</th><th></th></tr></thead>
+          <tbody>
+            ${invoices.length ? invoices.map(inv=>{
+              const status = invoiceStatusComputed(inv);
+              const hasPayments = inv.payments && inv.payments.length>0;
+              return `
+              <tr data-testid="invoice-row-${inv.id}">
+                <td><a class="row-link" data-testid="invoice-link-${inv.id}" onclick="nav('invoice-detail','${inv.id}')">${inv.id.replace('inv_','INV-')}</a></td>
+                <td class="muted">${escapeHtml(getCustomer(inv.customerId)?.name || 'Unknown')}</td>
+                <td>${tag(status)}</td>
+                <td class="muted">${fmtDate(inv.createdAt)}</td>
+                <td>${money(itemsTotal(inv.items))}</td>
+                <td>${money(invoiceBalance(inv))}</td>
+                <td>
+                  <div class="cell-actions">
+                    <button class="btn btn-sm btn-danger" data-testid="invoice-delete-${inv.id}" ${hasPayments?'disabled':''} title="${hasPayments?'Cannot delete — invoice has payments':'Delete invoice'}" onclick="confirmDeleteInvoice('${inv.id}')">Delete</button>
+                  </div>
+                </td>
+              </tr>
+            `}).join('') : emptyRow(7, 'No invoices yet', 'Create an invoice from a completed job.')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function confirmDeleteInvoice(id){
+  const inv = getInvoice(id);
+  if(inv.payments && inv.payments.length>0){
+    showToast("Can't delete — invoice has recorded payments");
+    return;
+  }
+  openConfirm('Delete invoice?', `Invoice ${id.replace('inv_','INV-')} will be permanently deleted.`, ()=>{
+    DB.invoices = DB.invoices.filter(x=>x.id!==id);
+    const job = DB.jobs.find(j=>j.invoiceId===id);
+    if(job) job.invoiceId = null;
+    persist();
+    showToast('Invoice deleted');
+    if(route.page==='invoice-detail' && route.id===id) nav('invoices'); else render();
+  });
+}
+
+function renderInvoiceDetail(id){
+  const inv = getInvoice(id);
+  if(!inv) return `<p>Invoice not found.</p>`;
+  const cust = getCustomer(inv.customerId);
+  const total = itemsTotal(inv.items);
+  const paid = invoicePaid(inv);
+  const balance = invoiceBalance(inv);
+  const status = invoiceStatusComputed(inv);
+  const job = inv.jobId ? getJob(inv.jobId) : null;
+
+  return `
+    <div class="breadcrumb"><a onclick="nav('invoices')">Invoices</a> / ${inv.id.replace('inv_','INV-')}</div>
+    <div class="detail-head">
+      <div>
+        <h1 data-testid="invoice-detail-title">${inv.id.replace('inv_','INV-')}</h1>
+        <div class="detail-meta">
+          <span data-testid="invoice-detail-status">${tag(status)}</span>
+          <span>Customer: ${escapeHtml(cust?.name||'Unknown')}</span>
+          <span>Created: ${fmtDate(inv.createdAt)}</span>
+          ${job ? `<span>From job: <a class="row-link" onclick="nav('job-detail','${job.id}')">${escapeHtml(job.title)}</a></span>` : ''}
+        </div>
+      </div>
+      <div class="cell-actions">
+        ${balance>0.001 ? `<button class="btn btn-amber" data-testid="btn-add-payment" onclick="openPaymentForm('${inv.id}')">Record Payment</button>` : ''}
+        <button class="btn btn-danger" data-testid="btn-delete-invoice" ${inv.payments.length>0?'disabled':''} title="${inv.payments.length>0?'Cannot delete — invoice has payments':'Delete invoice'}" onclick="confirmDeleteInvoice('${inv.id}')">Delete</button>
+      </div>
+    </div>
+    ${inv.payments.length>0 ? `<div class="convert-note" data-testid="invoice-delete-locked-note">This invoice can't be deleted while it has recorded payments. Remove the payments first if you need to delete it.</div>` : ''}
+
+    <div class="detail-grid">
+      <div>
+        <div class="card" style="margin-bottom:16px;">
+          <div style="padding:16px 18px 0;font-size:13px;text-transform:uppercase;color:var(--slate);letter-spacing:0.4px;font-weight:700;">Line Items</div>
+          <div class="table-wrap">
+            <table data-testid="invoice-items-table">
+              <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Amount</th></tr></thead>
+              <tbody>
+                ${inv.items.length ? inv.items.map(it=>`
+                  <tr><td>${escapeHtml(it.name)}</td><td>${it.qty}</td><td>${money(it.price)}</td><td>${money(it.qty*it.price)}</td></tr>
+                `).join('') : `<tr><td colspan="4" class="muted" style="padding:18px;">No line items.</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+          <div style="padding:14px 18px;display:flex;justify-content:flex-end;">
+            <div style="width:240px;">
+              <div class="totals-row"><span>Total</span><span data-testid="invoice-detail-total">${money(total)}</span></div>
+              <div class="totals-row"><span>Paid</span><span data-testid="invoice-detail-paid">${money(paid)}</span></div>
+              <div class="totals-row grand"><span>Balance</span><span data-testid="invoice-detail-balance">${money(balance)}</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="padding:16px 18px;font-size:13px;text-transform:uppercase;color:var(--slate);letter-spacing:0.4px;font-weight:700;">Payment History</div>
+          <div class="table-wrap">
+            <table data-testid="payments-table">
+              <thead><tr><th>Date</th><th>Method</th><th>Amount</th><th>Note</th><th></th></tr></thead>
+              <tbody>
+                ${inv.payments.length ? inv.payments.map(p=>`
+                  <tr data-testid="payment-row-${p.id}">
+                    <td>${fmtDate(p.date)}</td>
+                    <td style="text-transform:capitalize;">${escapeHtml(p.method)}</td>
+                    <td>${money(p.amount)}</td>
+                    <td class="muted">${escapeHtml(p.note||'—')}</td>
+                    <td>
+                      <div class="cell-actions">
+                        <button class="btn btn-sm btn-danger" data-testid="payment-delete-${p.id}" onclick="confirmDeletePayment('${inv.id}','${p.id}')">Delete</button>
+                      </div>
+                    </td>
+                  </tr>
+                `).join('') : `<tr><td colspan="5" class="muted" style="padding:18px;">No payments recorded yet.</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:18px;">
+        <h3 style="margin-top:0;font-size:13px;text-transform:uppercase;color:var(--slate);letter-spacing:0.4px;">Customer</h3>
+        ${cust ? `
+          <div class="kv"><span>Name</span><span>${escapeHtml(cust.name)}</span></div>
+          <div class="kv"><span>Email</span><span>${escapeHtml(cust.email)}</span></div>
+          <div class="kv"><span>Phone</span><span>${escapeHtml(cust.phone)}</span></div>
+        ` : `<p class="muted">No customer linked.</p>`}
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- PAYMENT FORM ---------- */
+let selectedPayMethod = 'card';
+function openPaymentForm(invoiceId){
+  const inv = getInvoice(invoiceId);
+  const balance = invoiceBalance(inv);
+  selectedPayMethod = 'card';
+
+  openPanel(`
+    <div class="panel-head">
+      <h2>Record Payment</h2>
+      <button class="btn btn-icon btn-ghost" data-testid="panel-close" onclick="closePanel()">&#10005;</button>
+    </div>
+    <div class="panel-body">
+      <div class="field">
+        <label>Amount</label>
+        <input type="number" min="0" step="0.01" id="f-amount" data-testid="input-payment-amount" value="${balance.toFixed(2)}">
+        <div class="hint">Balance due: ${money(balance)}</div>
+      </div>
+      <div class="field">
+        <label>Payment Method</label>
+        <div class="pay-method-grid" id="pay-method-grid">
+          ${['card','cash','check','bank_transfer'].map(m=>`
+            <div class="pay-method ${m==='card'?'selected':''}" data-testid="pay-method-${m}" data-method="${m}" onclick="selectPayMethod('${m}')">${statusLabel(m)}</div>
+          `).join('')}
+        </div>
+      </div>
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="f-pay-date" data-testid="input-payment-date" value="${new Date().toISOString().slice(0,10)}">
+      </div>
+      <div class="field">
+        <label>Note (optional)</label>
+        <textarea id="f-pay-note" data-testid="input-payment-note" placeholder="e.g. Paid via terminal at job site"></textarea>
+      </div>
+    </div>
+    <div class="panel-foot">
+      <button class="btn" onclick="closePanel()">Cancel</button>
+      <button class="btn btn-primary" data-testid="btn-save-payment" onclick="savePayment('${invoiceId}')">Record Payment</button>
+    </div>
+  `);
+}
+
+function selectPayMethod(m){
+  selectedPayMethod = m;
+  document.querySelectorAll('.pay-method').forEach(el=>{
+    el.classList.toggle('selected', el.dataset.method===m);
+  });
+}
+
+function savePayment(invoiceId){
+  const inv = getInvoice(invoiceId);
+  const amount = Number(document.getElementById('f-amount').value);
+  const date = document.getElementById('f-pay-date').value;
+  const note = document.getElementById('f-pay-note').value;
+
+  if(!amount || amount<=0){ showToast('Enter a valid payment amount'); return; }
+
+  inv.payments.push({id:uid('pay'), amount, method:selectedPayMethod, date, note});
+  persist();
+  showToast('Payment recorded');
+  closePanel();
+  nav('invoice-detail', invoiceId);
+}
+
+function confirmDeletePayment(invoiceId, paymentId){
+  const inv = getInvoice(invoiceId);
+  const payment = inv.payments.find(p=>p.id===paymentId);
+  if(!payment) return;
+  openConfirm('Delete payment?', `This ${money(payment.amount)} payment will be removed and the invoice balance will be recalculated.`, ()=>{
+    inv.payments = inv.payments.filter(p=>p.id!==paymentId);
+    persist();
+    showToast('Payment deleted');
+    nav('invoice-detail', invoiceId);
+  });
+}
+
+/* =====================================================================
+   CUSTOMERS
+   ===================================================================== */
+function renderCustomersList(){
+  const customers = DB.customers;
+  return `
+    <div class="card">
+      <div class="table-wrap">
+        <table data-testid="customers-table">
+          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Address</th><th></th></tr></thead>
+          <tbody>
+            ${customers.length ? customers.map(c=>`
+              <tr data-testid="customer-row-${c.id}">
+                <td style="font-weight:600;">${escapeHtml(c.name)}</td>
+                <td class="muted">${escapeHtml(c.email)}</td>
+                <td class="muted">${escapeHtml(c.phone)}</td>
+                <td class="muted">${escapeHtml(c.address)}</td>
+                <td>
+                  <div class="cell-actions">
+                    <button class="btn btn-sm" data-testid="customer-edit-${c.id}" onclick="openCustomerForm('${c.id}')">Edit</button>
+                    <button class="btn btn-sm btn-danger" data-testid="customer-delete-${c.id}" onclick="confirmDeleteCustomer('${c.id}')">Delete</button>
+                  </div>
+                </td>
+              </tr>
+            `).join('') : emptyRow(5, 'No customers yet', 'Add a customer to start creating jobs and quotes.')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function confirmDeleteCustomer(id){
+  const c = getCustomer(id);
+  const linked = DB.jobs.some(j=>j.customerId===id) || DB.quotes.some(q=>q.customerId===id) || DB.invoices.some(i=>i.customerId===id);
+  openConfirm(
+    'Delete customer?',
+    linked ? `"${c.name}" has linked jobs, quotes, or invoices. Deleting will not remove those records, but they will show "Unknown" customer.` : `"${c.name}" will be permanently deleted.`,
+    ()=>{
+      DB.customers = DB.customers.filter(x=>x.id!==id);
+      persist();
+      showToast('Customer deleted');
+      render();
+    }
+  );
+}
+
+function openCustomerForm(id=null){
+  const c = id ? getCustomer(id) : null;
+  const isEdit = !!c;
+  openPanel(`
+    <div class="panel-head">
+      <h2>${isEdit ? 'Edit Customer' : 'New Customer'}</h2>
+      <button class="btn btn-icon btn-ghost" data-testid="panel-close" onclick="closePanel()">&#10005;</button>
+    </div>
+    <div class="panel-body">
+      <div class="field">
+        <label>Full Name</label>
+        <input type="text" id="f-name" data-testid="input-customer-name" value="${escapeHtml(c?.name||'')}" placeholder="e.g. Jamie Carter">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="f-email" data-testid="input-customer-email" value="${escapeHtml(c?.email||'')}" placeholder="name@example.com">
+      </div>
+      <div class="field">
+        <label>Phone</label>
+        <input type="tel" id="f-phone" data-testid="input-customer-phone" value="${escapeHtml(c?.phone||'')}" placeholder="555-0100">
+      </div>
+      <div class="field">
+        <label>Address</label>
+        <textarea id="f-address" data-testid="input-customer-address" placeholder="Street, city">${escapeHtml(c?.address||'')}</textarea>
+      </div>
+    </div>
+    <div class="panel-foot">
+      <button class="btn" onclick="closePanel()">Cancel</button>
+      <button class="btn btn-primary" data-testid="btn-save-customer" onclick="saveCustomer(${isEdit ? `'${id}'` : 'null'})">${isEdit ? 'Save Changes' : 'Create Customer'}</button>
+    </div>
+  `);
+}
+
+function saveCustomer(id){
+  const name = document.getElementById('f-name').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  const phone = document.getElementById('f-phone').value.trim();
+  const address = document.getElementById('f-address').value.trim();
+
+  if(!name){ showToast('Customer name is required'); return; }
+
+  if(id){
+    Object.assign(getCustomer(id), {name, email, phone, address});
+    showToast('Customer updated');
+  } else {
+    DB.customers.push({id:uid('cust'), name, email, phone, address});
+    showToast('Customer created');
+  }
+  persist();
+  closePanel();
+  render();
+}
+
+/* =====================================================================
+   INIT
+   ===================================================================== */
+render();
+</script>
+</body>
+</html>
